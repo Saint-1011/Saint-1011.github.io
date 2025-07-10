@@ -376,5 +376,77 @@ document.getElementById('new-coloring').addEventListener('click', function() {
 const letters = ['ሀ', 'ለ', 'መ', 'ሰ', 'ረ', 'ቀ'];
 const randomLetter = letters[Math.floor(Math.random() * letters.length)];
 document.querySelector('.coloring-page h3').textContent = `Color the Letter: ${randomLetter}`;
+
+// Streak Tracking System
+let streak = {
+  current: 0,
+  longest: 0,
+  lastActiveDate: null
+};
+
+// Initialize streak from localStorage if available
+function initializeStreak() {
+  const savedStreak = localStorage.getItem('amharicStreak');
+  if (savedStreak) {
+    streak = JSON.parse(savedStreak);
+  }
+  
+  updateStreakDisplay();
+}
+
+// Check and update streak when user is active
+function updateStreak() {
+  const today = new Date().toDateString();
+  
+  // If user was active yesterday or today, increment streak
+  if (!streak.lastActiveDate || 
+      new Date(streak.lastActiveDate).toDateString() === today) {
+    // Already updated today
+    return;
+  }
+  
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  
+  if (new Date(streak.lastActiveDate).toDateString() === yesterday.toDateString()) {
+    // Consecutive day
+    streak.current++;
+  } else {
+    // Broken streak
+    streak.current = 1;
+  }
+  
+  // Update longest streak if needed
+  if (streak.current > streak.longest) {
+    streak.longest = streak.current;
+  }
+  
+  streak.lastActiveDate = today;
+  localStorage.setItem('amharicStreak', JSON.stringify(streak));
+  updateStreakDisplay();
+}
+
+// Update the UI with current streak data
+function updateStreakDisplay() {
+  document.querySelectorAll('.streak-count').forEach(el => {
+    el.textContent = streak.current;
+  });
+  
+  // Update streak calendar dots
+  const today = new Date();
+  for (let i = 0; i < 5; i++) {
+    const date = new Date();
+    date.setDate(today.getDate() - i);
+    
+    const dot = document.querySelector(`.streak-calendar div:nth-child(${i + 1}) div`);
+    if (dot) {
+      const wasActive = streak.lastActiveDate && 
+        new Date(streak.lastActiveDate).toDateString() === date.toDateString();
+      dot.style.backgroundColor = wasActive ? '#2ecc71' : '#e74c3c';
+    }
+  }
+}
+function recordActivity() {
+  updateStreak();
 });
 }
